@@ -1,0 +1,562 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>《理想国》读书会简明版</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
+<meta name="theme-color" content="#0F6B5E">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="理想国读书会">
+<meta name="description" content="用小学五年级就能看懂的话，讲《理想国》里最有用的想法。可以划线提问，把问题发给作者。">
+<style>
+/* Layout: one chapter per screen, sticky top bar, bottom bar appears when text is selected.
+   No web fonts or CDNs: everything is in this file so it opens fine in China and inside WeChat. */
+:root {
+  --bg: #F3F5F2;
+  --paper: #FFFFFF;
+  --ink: #1E2823;
+  --muted: #5B6A62;
+  --line: #DCE3DE;
+  --accent: #0F6B5E;
+  --accent-soft: #E0EFEB;
+  --mark: #FFE38A;
+  --mark-on: #F5C842;
+  --warn: #B4532A;
+  --font: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", "Source Han Sans SC", system-ui, sans-serif;
+  --font-title: "Songti SC", "STSong", "Noto Serif SC", "Source Han Serif SC", "SimSun", serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #121815; --paper: #1A221E; --ink: #E4ECE7; --muted: #9BADA3; --line: #2C3832;
+    --accent: #6CC7B4; --accent-soft: #1F3530; --mark: #6A5A16; --mark-on: #8C7618; --warn: #E08A62;
+    color-scheme: dark;
+  }
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 18px/1.85 var(--font); }
+button { font: inherit; color: inherit; }
+.wrap { max-width: 680px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left)); padding-right: max(16px, env(safe-area-inset-right)); }
+
+header { position: sticky; top: 0; z-index: 5; background: var(--bg); border-bottom: 1px solid var(--line); padding-top: env(safe-area-inset-top); }
+header .wrap { display: flex; align-items: center; gap: 8px; padding-block: 10px; }
+.brand { flex: 1; min-width: 0; font: 700 1rem/1.3 var(--font-title); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tbtn { border: 1px solid var(--line); background: var(--paper); border-radius: 999px; padding: 6px 14px; font-size: .9rem; cursor: pointer; white-space: nowrap; }
+.tbtn b { color: var(--accent); }
+
+main .wrap { padding-block: 20px 120px; }
+article { background: var(--paper); border: 1px solid var(--line); border-radius: 14px; padding: 22px 20px; }
+.kicker { font-size: .85rem; color: var(--muted); margin: 0 0 4px; }
+h1 { font: 700 1.55rem/1.4 var(--font-title); margin: 0 0 18px; }
+h2.lbl { font-size: .9rem; font-weight: 700; color: var(--accent); margin: 22px 0 4px; letter-spacing: .05em; }
+p { margin: 0 0 10px; }
+.one { font: 700 1.2rem/1.7 var(--font-title); }
+ul, ol { margin: 0 0 10px; padding-left: 1.4em; }
+li { margin-bottom: 4px; }
+.example { background: var(--accent-soft); border-radius: 10px; padding: 12px 14px; }
+mark.hl { background: var(--mark); color: inherit; border-radius: 3px; padding: 0 1px; cursor: pointer; }
+mark.hl.on { background: var(--mark-on); }
+
+.task { display: flex; gap: 10px; align-items: flex-start; border: 1px dashed var(--line); border-radius: 10px; padding: 12px; cursor: pointer; }
+.task input { width: 22px; height: 22px; margin-top: 5px; accent-color: var(--accent); flex-shrink: 0; }
+
+.check { margin-top: 26px; border-top: 1px solid var(--line); padding-top: 16px; }
+.check p { color: var(--muted); font-size: .95rem; }
+.choices { display: flex; flex-wrap: wrap; gap: 8px; }
+.choice { border: 1px solid var(--line); background: var(--bg); border-radius: 999px; padding: 6px 16px; cursor: pointer; font-size: .95rem; }
+.choice[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--paper); }
+.hint { font-size: .85rem; color: var(--muted); }
+
+.pager { display: flex; justify-content: space-between; gap: 10px; margin-top: 18px; }
+.pbtn { flex: 1; border: 1px solid var(--line); background: var(--paper); border-radius: 12px; padding: 12px; cursor: pointer; text-align: left; font-size: .95rem; min-width: 0; }
+.pbtn.next { text-align: right; }
+.pbtn small { display: block; color: var(--muted); font-size: .8rem; }
+.pbtn[hidden] { visibility: hidden; display: block; }
+
+.toc a { display: flex; justify-content: space-between; gap: 10px; padding: 12px 4px; border-bottom: 1px solid var(--line); color: inherit; text-decoration: none; }
+.toc a:last-child { border-bottom: 0; }
+.toc .meta { color: var(--muted); font-size: .85rem; white-space: nowrap; }
+
+/* Bottom bar: shows while text is selected, so phone users can ask about it. */
+.selbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 8; background: var(--ink); color: var(--paper); padding: 12px max(16px, env(safe-area-inset-left)) calc(12px + env(safe-area-inset-bottom)); display: flex; align-items: center; gap: 12px; justify-content: center; }
+.selbar button { background: var(--mark); color: #1E2823; border: 0; border-radius: 999px; padding: 10px 20px; font-weight: 700; cursor: pointer; }
+.fab { position: fixed; right: max(16px, env(safe-area-inset-right)); bottom: calc(16px + env(safe-area-inset-bottom)); z-index: 6; background: var(--accent); color: var(--paper); border: 0; border-radius: 999px; padding: 12px 18px; font-weight: 700; box-shadow: 0 4px 14px rgba(0,0,0,.18); cursor: pointer; }
+
+.sheet-bg { position: fixed; inset: 0; z-index: 10; background: rgba(0,0,0,.4); display: flex; align-items: flex-end; justify-content: center; }
+.sheet { width: 100%; max-width: 680px; max-height: 88vh; overflow: auto; background: var(--paper); border-radius: 16px 16px 0 0; padding: 18px max(16px, env(safe-area-inset-left)) calc(18px + env(safe-area-inset-bottom)); }
+.sheet h3 { margin: 0 0 8px; font: 700 1.15rem/1.4 var(--font-title); }
+.quote { border-left: 3px solid var(--mark-on); padding-left: 10px; color: var(--muted); margin: 0 0 12px; font-size: .95rem; }
+textarea, input[type="text"] { width: 100%; border: 1px solid var(--line); background: var(--bg); color: var(--ink); border-radius: 10px; padding: 10px; font: inherit; font-size: 1rem; }
+textarea { min-height: 96px; resize: vertical; }
+.row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+.btn { border: 1px solid var(--accent); background: var(--accent); color: var(--paper); border-radius: 10px; padding: 10px 18px; font-weight: 700; cursor: pointer; }
+.btn.ghost { background: transparent; color: var(--accent); }
+.btn.danger { background: transparent; border-color: var(--warn); color: var(--warn); }
+.note { border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; margin-bottom: 8px; }
+.note .q { margin: 4px 0 0; }
+.note a { color: var(--accent); font-size: .85rem; }
+.toast { position: fixed; left: 50%; bottom: calc(80px + env(safe-area-inset-bottom)); transform: translateX(-50%); background: var(--ink); color: var(--paper); padding: 8px 16px; border-radius: 999px; font-size: .9rem; z-index: 20; }
+button:focus-visible, a:focus-visible, textarea:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+[hidden] { display: none !important; }
+.install { display: flex; gap: 10px; align-items: center; background: var(--accent-soft); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; margin-bottom: 14px; font-size: .9rem; line-height: 1.6; }
+.install span { flex: 1; }
+.install button { border: 0; background: var(--accent); color: var(--paper); border-radius: 999px; padding: 6px 12px; cursor: pointer; white-space: nowrap; }
+/* Tablets (iPad mini is 744px wide in portrait): a little larger text, roomier page, centered dialogs. */
+@media (min-width: 700px) {
+  body { font-size: 19px; }
+  .wrap { max-width: 720px; }
+  article { padding: 32px 36px; }
+  h1 { font-size: 1.75rem; }
+  .sheet-bg { align-items: center; }
+  .sheet { border-radius: 16px; max-width: 600px; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <div class="brand">《理想国》读书会简明版</div>
+    <button class="tbtn" id="tocBtn">目录</button>
+    <button class="tbtn" id="myBtn">我的问题 <b id="myCount">0</b></button>
+  </div>
+</header>
+
+<main><div class="wrap" id="view"></div></main>
+
+<div class="selbar" id="selbar" hidden><span>选中了一段文字</span><button id="askBtn">对这段提问</button></div>
+<button class="fab" id="fab">提个问题</button>
+<div id="sheetRoot"></div>
+
+<script>
+// ---------- settings for whoever publishes this ----------
+const CONFIG = {
+  // Shown on the "我的问题" page so readers know where to send feedback.
+  sendTo: "把复制好的内容发给分享这个链接给你的朋友（微信就可以）。",
+  // Optional: a URL that accepts a JSON POST (for example a form service). Leave empty to use copy/share only.
+  feedbackUrl: "",
+};
+
+// ---------- content (plain-language guide written for this book club; not a translation of the book) ----------
+const INTRO = {
+  id: "intro", title: "怎么用这份讲义",
+  blocks: [
+    { p: "这是一份读书会讲义：用小学五年级就能看懂的话，讲柏拉图《理想国》（英文书名 The Republic）里最有用的想法，每卷配一个生活例子和一个这周就能做的小练习。它不是原书的翻译，想读原文的朋友可以找中文版《理想国》。" },
+    { p: "柏拉图是大约2400年前古希腊的哲学家（哲学家：专门想“人该怎么活”这类大问题的人）。这本书不是一篇文章，而是一场很长的聊天，主角是他的老师苏格拉底。大家争的问题是：什么是“正义”？也就是，做一个公平、正直的人，到底值不值？为了想清楚，他们在脑子里一起“搭”了一个最好的国家，所以书叫《理想国》。" },
+    { p: "书很老，里面有不少想法今天的人不同意，比如谁该干什么活、家该怎么安排。这很正常。苏格拉底自己最爱追问和反驳，你读的时候也可以边读边不同意。" },
+    { p: "每卷都分四块，读一卷大约5分钟：" },
+    { ol: ["一句话：这一卷最重要的想法。", "大白话：用简单的话把它讲清楚。", "生活里的例子：放到工作和生活里，它是什么样子。", "这周试一试：一个小练习，做完打个勾。"] },
+    { p: "全书分10卷（“卷”就是书里大的一部分），建议一周读一卷，读完和朋友聊10分钟。不用全部看懂，能用上一个想法就是收获。" },
+    { p: "看不懂的地方，用手指按住文字选中它，点下面的“对这段提问”，写下你的问题。所有问题都在右上角“我的问题”里，可以一键复制发给作者。" },
+  ],
+};
+
+const CHAPTERS = [
+  { n: "第1卷", t: "正义是什么",
+    one: "“谁强谁说了算”就是正义吗？苏格拉底说不是。",
+    plain: [
+      { p: "故事从一场聚会开始。苏格拉底问大家：什么是正义？有人说是“欠人的要还”，有人说是“对朋友好、对敌人坏”。苏格拉底一个个追问，发现这些说法都有漏洞。" },
+      { p: "这时一个叫色拉叙马霍斯的人很不客气地说：正义就是强者的好处，规矩都是有权的人为自己定的。苏格拉底反问：医生的本事是为了病人，船长的本事是为了一船的人；真会管事的人，本事也该用在被管的人身上。" },
+    ],
+    ex: "餐厅领班可以把轻松的活留给自己，把累的推给新人；也可以把班排得合理，让大家都干得顺。前一种是“强者说了算”，后一种才是会带人。",
+    task: "用一句话写下：你觉得“公平”是什么？下次读书会让别人来挑毛病。" },
+  { n: "第2卷", t: "没人看见时，你还守规矩吗",
+    one: "如果做坏事永远不会被发现，人还会做好人吗？",
+    plain: [
+      { p: "柏拉图的两个兄弟出了个难题。他们讲了一个故事：一个放羊人捡到一枚戒指，一转就能隐身。他用它干了坏事，没人知道。那么，人做好人，是不是只是怕被抓、为了好名声？" },
+      { p: "苏格拉底说，要看清一个人，先看大一点的东西：一座城。人们住在一起，是因为一个人干不了所有活，有人种地、有人盖房、有人做鞋。柏拉图觉得每人最好一辈子只干最适合自己的一样。今天很多人不同意：人可以换工作，也能学新本事。" },
+    ],
+    ex: "打手游时发现一个外挂，开了也查不到，排名能一下冲上去。用不用？这就是那枚隐身戒指。",
+    task: "写下一件没人看见你也会照样做对的事，再写一件你承认“没人看见可能就不做了”的事。" },
+  { n: "第3卷", t: "从小听什么，长成什么",
+    one: "孩子听的故事、练的身体，会慢慢变成他的性格。",
+    plain: [
+      { p: "柏拉图很看重教育。他说孩子从小听的故事，会悄悄长成他心里的样子，所以故事要挑。他还说，只练身体的人容易粗暴，只学音乐诗歌的人容易软弱，两样都练，人才平衡。" },
+      { p: "这一卷还有个有名的“金银铜铁”故事：告诉城里的人，每人生来身体里掺了不同的金属，所以该干不同的活。书里苏格拉底自己也承认，这是编出来让大家安心的故事。你觉得这样做对吗？读书会可以争一争。" },
+    ],
+    ex: "健身教练都知道，只练力量不拉伸，人会变僵；只拉伸不练力量，又没劲。带孩子也一样，光让他读书或光让他跑都不够。",
+    task: "这周记下孩子（或你自己）最常看的三个视频或故事，挑出一个你愿意他多看的。" },
+  { n: "第4卷", t: "心里的三个声音",
+    one: "心里有理智、血气、欲望三部分，理智带头，人才正直。",
+    plain: [
+      { p: "城搭好了，柏拉图说好城有四样东西：智慧、勇敢、节制、正义。正义就是每一部分干好自己的事，不去抢别人的。人心也一样，分三部分：" },
+      { ul: ["理智：会想、会算，知道什么对自己真的好。", "血气：有脾气、要面子、会生气，也会为对的事站出来。", "欲望：想吃、想喝、想要钱和舒服。"] },
+      { p: "一个正直的人，是理智带头，血气帮着理智，欲望听安排。三样各干各的，心里就不打架。" },
+    ],
+    ex: "戒烟时，欲望说“就抽一根”，理智说“为了孩子别抽”，血气说“我说到就要做到”。血气站到理智这边，这一根就忍住了。",
+    task: "这周下次特别想要一样东西时（一根烟、一杯奶茶、多刷半小时手机），停下来写：三个声音各说了什么？最后谁赢了？" },
+  { n: "第5卷", t: "三个大浪",
+    one: "女人也能做守护者；最好的城，要由爱智慧的人来管。",
+    plain: [
+      { p: "苏格拉底说，接下来的话会像三个大浪，一浪比一浪让人吃惊：" },
+      { ol: ["女人和男人一样，可以受一样的教育，干一样的大事。在2400年前，这非常大胆。", "守护城的人不要自己的小家，孩子由大家一起养。今天绝大多数人都不同意这一条。", "最好的城，要由真正爱智慧的人来管，书里叫“哲学王”。"] },
+    ],
+    ex: "健身房里有女教练带力量课，街上有女骑手送外卖。两千多年前柏拉图就说，看一个人能不能干，要看她的本事，不看是男是女。",
+    task: "写下一份你曾经觉得“只适合男人”或“只适合女人”的活，再想想：真是这样吗？" },
+  { n: "第6卷", t: "谁该掌舵",
+    one: "该听真懂的人，不是嗓门最大的人。",
+    plain: [
+      { p: "苏格拉底讲了一条船：船主人有点耳背、眼神也不好；水手们都抢着掌舵，谁会说好话、会拉人谁就上。真正懂星星和风向的领航员，反倒被笑成“只会看天的怪人”。" },
+      { p: "他还打了个比方：太阳让眼睛看得见东西，“善”（真正的好）让脑子看得清道理。想明白什么是真正的好，做事才不会走偏。" },
+    ],
+    ex: "骑行队出去骑长途，路线该听谁的？不是喊得最响的，而是真骑过这条路、知道哪里有补给和陡坡的那个人。",
+    task: "想一件你最近要做的决定（换工作、买东西、带孩子看病），写下：我在听谁的？他真懂这件事吗？" },
+  { n: "第7卷", t: "洞穴的故事",
+    one: "人很容易把影子当真；走出去看清楚，要勇气，也会疼。",
+    plain: [
+      { p: "这是全书最有名的故事。一群人从小被绑在山洞里，只能看着墙。身后有火，有人举着东西走过，墙上就出现影子。他们一辈子只见过影子，就以为影子是真的。" },
+      { p: "有一个人被解开，回头看见火光，眼睛刺痛；被拉出洞，阳光更刺眼，过了好久才看清真正的树和太阳。他回洞里告诉大家，大家却笑他，甚至想对他动手。" },
+      { p: "柏拉图说，教育不是往空脑袋里灌东西，而是帮人把头转过来，看向光。" },
+    ],
+    ex: "第一次从老家到大城市打工，什么都不习惯，很累，也长了见识。过年回家讲外面的事，亲戚有时不信，还说你变了。",
+    task: "写下一件你以前深信、后来发现不是那样的事。是什么让你“转过头”的？" },
+  { n: "第8卷", t: "人是怎么一步步变的",
+    one: "好的状态会一步步变坏：先爱面子，再爱钱，再乱，最后失控。",
+    plain: [
+      { p: "柏拉图觉得一座城和一个人很像，都会一步步走下坡路。他把城分成好几种，后人对这一卷争论很多。我们这里只看他讲的“人”：" },
+      { ol: ["爱面子的人：最看重荣誉和别人的佩服。", "爱钱的人：眼里只剩存钱，很抠，别的想要都压着。", "什么都想要的人：今天想这个、明天想那个，觉得每种想要都一样重要，没有主心骨。", "被一个欲望管住的人：最后被一个最强的欲望牵着走，这是最差的一种。"] },
+      { p: "他还发现，这种变化常常发生在父母和孩子之间：孩子看不惯父母的样子，就往反方向走。" },
+    ],
+    ex: "一个爸爸年轻时吃过苦，拼命存钱，一分都不舍得花；儿子从小憋屈，长大后挣多少花多少。两人都觉得对方不对，其实都没找到中间那条路。",
+    task: "写下你现在最看重的一样东西：面子、钱、自由，还是别的？它在帮你，还是在牵着你走？" },
+  { n: "第9卷", t: "谁最快乐",
+    one: "被欲望牵着走的人最不自由；心里有主的人最快乐。",
+    plain: [
+      { p: "柏拉图说，被一个欲望完全管住的人，看起来想干什么就干什么，其实最不自由：他总不满足，总怕失去。心里由理智做主的人，反而最踏实、最快乐。" },
+      { p: "他打了个比方：每个人心里住着一只多头怪兽（欲望）、一头狮子（血气）和一个小小的人（理智）。你喂谁，谁就长大。正直，就是把那个小人养壮，让他和狮子一起管住怪兽。" },
+    ],
+    ex: "有人玩游戏充值，一开始为了开心，后来抽不到就想再充一次，停不下来。看着是自己在选，其实是那只“怪兽”在选。",
+    task: "写下一样“你管得住它”的东西，和一样“它管着你”的东西。这周给后一样定一条小规矩。" },
+  { n: "第10卷", t: "挑你的人生",
+    one: "人生最重要的本事是会挑：挑对的，不挑看着亮的。",
+    plain: [
+      { p: "这一卷先说模仿：木匠照着“床”的样子做出一张床，画家又照着这张床画一幅画，画离真东西就更远了。柏拉图提醒大家，别把“像真的”当成真的。" },
+      { p: "最后他讲了个故事：士兵厄尔战死，十多天后在火葬堆上醒来，说他看见了另一个世界。那里的灵魂要挑下一辈子。第一个挑的人一把抓住最大的权力，没细看，后来才发现里面藏着大祸，后悔大哭。最后挑的是聪明的奥德修斯，他找了好久，挑了一份平平常常、安安静静的普通人生活，还说就算让他第一个挑，他也选这个。" },
+      { p: "柏拉图说，学正义、学道理，就是为了每次挑的时候能挑对。" },
+    ],
+    ex: "换工作时，有的活这个月钱最多，但天天熬夜、没空陪孩子，也学不到新东西。挑工作也像挑人生：别只看最亮的那一眼，要看它会把你变成什么样。",
+    task: "如果明天能重新挑一种生活，写下你会挑什么、为什么。再写一件这周就能往那边走一小步的事。" },
+];
+
+const CLUB = {
+  id: "club", title: "读书会怎么开",
+  blocks: [
+    { p: "每周一次，每次30分钟，当面或视频都可以。人不用多，两三个就够。" },
+    { ol: ["先聊上周（5分钟）：上周的“试一试”做了没有？发生了什么？", "一起读（10分钟）：轮流读这周这一卷。", "像苏格拉底那样聊（10分钟）：一个人说出一个看法，比如“公平就是……”；其他人只许提问：“为什么？”“有没有反例？”看看这个看法能撑多久。", "定下周的小行动（5分钟）：每个人说出自己这周要试的一件事。"] },
+    { p: "小提醒：问的是想法，不是人；被问倒了不丢人，苏格拉底有个有名的想法：知道自己不懂，才是聪明的开始。这不是考试，是朋友一起变好的时间。" },
+  ],
+};
+CHAPTERS.forEach((c, i) => { c.id = "c" + (i + 1); });
+const PAGES = [INTRO, ...CHAPTERS, CLUB];
+const pageIdx = (id) => PAGES.findIndex((p) => p.id === id);
+const pageName = (p) => p.n ? `${p.n}　${p.t}` : p.title;
+
+// ---------- reader data, kept only on this phone ----------
+const KEY = "republic-bookclub-v1";
+let state = { notes: [], tasks: {}, level: {}, name: "", last: "intro" };
+try { state = Object.assign(state, JSON.parse(localStorage.getItem(KEY) || "{}")); } catch (e) {}
+if (!state.reader) state.reader = "r" + Math.random().toString(36).slice(2, 10);
+// With CONFIG.feedbackUrl set, every save is also sent to the organizer (batched a few seconds), so readers don't have to send anything.
+let syncTimer = null;
+function autoSend() {
+  if (!CONFIG.feedbackUrl) return;
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(() => {
+    fetch(CONFIG.feedbackUrl, { method: "POST", headers: { "Content-Type": "application/json" }, keepalive: true,
+      body: JSON.stringify({ reader: state.reader, name: state.name, notes: state.notes, level: state.level, tasks: state.tasks, text: feedbackText(), at: new Date().toISOString() }) })
+      .then((r) => { state.sentAt = r.ok ? new Date().toISOString() : state.sentAt; persist(); })
+      .catch(() => {});
+  }, 3000);
+}
+const persist = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} };
+const save = () => { persist(); autoSend(); };
+
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+let pidSeq = 0;
+const para = (cls, html) => `<p data-pid="${pidSeq++}"${cls ? ` class="${cls}"` : ""}>${html}</p>`;
+function blocksHTML(blocks) {
+  return blocks.map((b) => {
+    if (b.p) return para("", esc(b.p));
+    const tag = b.ol ? "ol" : "ul";
+    return `<${tag}>${(b.ol || b.ul).map((x) => `<li data-pid="${pidSeq++}">${esc(x)}</li>`).join("")}</${tag}>`;
+  }).join("");
+}
+
+// ---------- views ----------
+const LEVELS = ["都看懂了", "有一点难", "很多看不懂"];
+function renderPage(id) {
+  const i = Math.max(0, pageIdx(id));
+  const pg = PAGES[i];
+  state.last = pg.id; persist();
+  pidSeq = 0;
+  let body;
+  if (pg.n) {
+    body = `<p class="kicker">${esc(pg.n)}</p><h1>${esc(pg.t)}</h1>
+      <h2 class="lbl">一句话</h2>${para("one", esc(pg.one))}
+      <h2 class="lbl">大白话</h2>${blocksHTML(pg.plain)}
+      <h2 class="lbl">生活里的例子</h2>${para("example", esc(pg.ex))}
+      <h2 class="lbl">这周试一试</h2>
+      <label class="task"><input type="checkbox" id="taskBox" ${state.tasks[pg.id] ? "checked" : ""}><span data-pid="${pidSeq++}">${esc(pg.task)}</span></label>
+      <div class="check"><p>这一章你看懂了吗？（作者会根据大家的回答改进讲义）</p>
+        <div class="choices">${LEVELS.map((l, k) => `<button class="choice" data-level="${k}" aria-pressed="${state.level[pg.id] === k}">${l}</button>`).join("")}</div>
+        <p class="hint" style="margin-top:10px">哪里看不懂？按住文字选中它，点“对这段提问”。</p>
+      </div>`;
+  } else {
+    body = `<h1>${esc(pg.title)}</h1>${blocksHTML(pg.blocks)}`;
+  }
+  const prev = PAGES[i - 1], next = PAGES[i + 1];
+  $("#view").innerHTML = `<article id="art" data-page="${pg.id}">${body}</article>
+    <div class="pager">
+      <button class="pbtn" id="prevBtn" ${prev ? "" : "hidden"}><small>上一篇</small>${prev ? esc(pageName(prev)) : ""}</button>
+      <button class="pbtn next" id="nextBtn" ${next ? "" : "hidden"}><small>下一篇</small>${next ? esc(pageName(next)) : ""}</button>
+    </div>`;
+  if (prev) $("#prevBtn").onclick = () => go(prev.id);
+  if (next) $("#nextBtn").onclick = () => go(next.id);
+  const tb = $("#taskBox");
+  if (tb) tb.onchange = () => { state.tasks[pg.id] = tb.checked; save(); };
+  document.querySelectorAll("[data-level]").forEach((b) => b.onclick = () => {
+    const k = Number(b.dataset.level);
+    state.level[pg.id] = state.level[pg.id] === k ? undefined : k; save();
+    document.querySelectorAll("[data-level]").forEach((x) => x.setAttribute("aria-pressed", String(state.level[pg.id] === Number(x.dataset.level))));
+    if (k > 0 && state.level[pg.id] === k) toast("谢谢！可以选中看不懂的文字提个问题。");
+  });
+  applyHighlights(pg.id);
+  window.scrollTo(0, 0);
+}
+function renderToc() {
+  $("#view").innerHTML = `<article><h1>目录</h1><nav class="toc">${PAGES.map((p) => {
+    const n = state.notes.filter((x) => x.page === p.id).length;
+    const meta = [state.tasks[p.id] ? "已练习" : "", n ? `${n}个问题` : ""].filter(Boolean).join(" · ");
+    return `<a href="#${p.id}" data-go="${p.id}"><span>${esc(pageName(p))}</span><span class="meta">${meta}</span></a>`;
+  }).join("")}</nav></article>`;
+  window.scrollTo(0, 0);
+}
+// Navigation is driven by the page itself; the #hash is only kept in sync where the browser allows it
+// (some in-app viewers block hash changes, which broke the contents and previous/next buttons).
+let current = (() => { try { return location.hash.slice(1); } catch (e) { return ""; } })() || state.last;
+function go(id) {
+  current = id;
+  route();
+  try { if (location.hash.slice(1) !== id) history.pushState(null, "", "#" + id); } catch (e) {}
+}
+function route() {
+  if (current === "toc") renderToc();
+  else renderPage(pageIdx(current) >= 0 ? current : state.last);
+  $("#myCount").textContent = state.notes.length;
+}
+window.addEventListener("hashchange", () => { const id = location.hash.slice(1); if (id && id !== current) { current = id; route(); } });
+window.addEventListener("popstate", () => { const id = location.hash.slice(1) || state.last; if (id !== current) { current = id; route(); } });
+document.addEventListener("click", (e) => {
+  const a = e.target.closest("[data-go]");
+  if (!a) return;
+  e.preventDefault();
+  closeSheet();
+  go(a.dataset.go);
+});
+$("#tocBtn").onclick = () => go("toc");
+$("#myBtn").onclick = openMine;
+
+// ---------- highlights ----------
+function textNodes(el) {
+  const out = [], w = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+  while (w.nextNode()) out.push(w.currentNode);
+  return out;
+}
+function wrapText(el, text, noteId) {
+  const nodes = textNodes(el);
+  const full = nodes.map((n) => n.nodeValue).join("");
+  const start = full.indexOf(text);
+  if (start < 0 || !text) return;
+  const end = start + text.length;
+  let pos = 0;
+  nodes.forEach((n) => {
+    const a = pos, b = pos + n.nodeValue.length;
+    pos = b;
+    const s = Math.max(start, a), e = Math.min(end, b);
+    if (s >= e) return;
+    const r = document.createRange();
+    r.setStart(n, s - a); r.setEnd(n, e - a);
+    const m = document.createElement("mark");
+    m.className = "hl"; m.dataset.note = noteId;
+    r.surroundContents(m);
+  });
+}
+function applyHighlights(page) {
+  state.notes.filter((x) => x.page === page).forEach((x) => {
+    const el = document.querySelector(`#art [data-pid="${x.pid}"]`);
+    if (el) wrapText(el, x.text, x.id);
+  });
+}
+document.addEventListener("click", (e) => {
+  const m = e.target.closest("mark.hl");
+  if (m && !hasSelection()) { e.preventDefault(); openNote(state.notes.find((x) => x.id === m.dataset.note)); }
+});
+
+// ---------- selecting text to ask ----------
+let pending = null;
+function hasSelection() { const s = window.getSelection(); return s && !s.isCollapsed && s.toString().trim().length > 0; }
+function readSelection() {
+  const s = window.getSelection();
+  if (!s || s.isCollapsed) return null;
+  const text = s.toString().replace(/\s+/g, " ").trim();
+  if (!text) return null;
+  const node = (n) => (n.nodeType === 1 ? n : n.parentElement);
+  const a = node(s.anchorNode)?.closest("[data-pid]"), b = node(s.focusNode)?.closest("[data-pid]");
+  const art = $("#art");
+  if (!art || !a || !art.contains(a)) return null;
+  // A selection across paragraphs is kept as the part inside the first one.
+  const el = a;
+  const inEl = a === b ? text : (el.textContent.includes(text) ? text : text.slice(0, 60));
+  return { page: art.dataset.page, pid: Number(el.dataset.pid), text: el.textContent.includes(inEl) ? inEl : el.textContent.slice(0, 60) };
+}
+document.addEventListener("selectionchange", () => {
+  const sel = readSelection();
+  pending = sel;
+  $("#selbar").hidden = !sel;
+  $("#fab").hidden = !!sel;
+});
+$("#askBtn").addEventListener("mousedown", (e) => e.preventDefault());
+$("#askBtn").onclick = () => {
+  const sel = pending || readSelection();
+  if (!sel) return;
+  window.getSelection().removeAllRanges();
+  $("#selbar").hidden = true; $("#fab").hidden = false;
+  openNote(null, sel);
+};
+$("#fab").onclick = () => {
+  const art = $("#art");
+  openNote(null, { page: art ? art.dataset.page : "intro", pid: -1, text: "" });
+};
+
+// ---------- sheets ----------
+function sheet(html) {
+  const root = $("#sheetRoot");
+  root.innerHTML = `<div class="sheet-bg" id="sbg"><div class="sheet" role="dialog" aria-modal="true">${html}</div></div>`;
+  $("#sbg").addEventListener("click", (e) => { if (e.target.id === "sbg") closeSheet(); });
+  return root;
+}
+function closeSheet() { $("#sheetRoot").innerHTML = ""; }
+function openNote(note, sel) {
+  const isNew = !note;
+  const data = note || { id: "n" + Date.now().toString(36), page: sel.page, pid: sel.pid, text: sel.text, q: "", at: new Date().toISOString() };
+  const pg = PAGES[pageIdx(data.page)];
+  sheet(`<h3>${isNew ? "提一个问题" : "我的问题"}</h3>
+    <p class="hint">${esc(pageName(pg))}</p>
+    ${data.text ? `<p class="quote">${esc(data.text)}</p>` : ""}
+    <textarea id="qBox" placeholder="哪里看不懂？或者你想到了什么？随便写，写一半也行。">${esc(data.q)}</textarea>
+    <div class="row">
+      <button class="btn" id="saveQ">保存</button>
+      <button class="btn ghost" id="cancelQ">取消</button>
+      ${isNew ? "" : `<button class="btn danger" id="delQ">删除</button>`}
+    </div>`);
+  const box = $("#qBox");
+  setTimeout(() => box.focus(), 50);
+  $("#cancelQ").onclick = closeSheet;
+  $("#saveQ").onclick = () => {
+    data.q = box.value.trim();
+    if (!data.q && !data.text) { closeSheet(); return; }
+    if (isNew) state.notes.push(data);
+    save(); closeSheet(); route();
+    toast("已保存。在“我的问题”里可以发给作者。");
+  };
+  if (!isNew) $("#delQ").onclick = () => { state.notes = state.notes.filter((x) => x.id !== data.id); save(); closeSheet(); route(); };
+}
+
+// ---------- my questions + send to the author ----------
+function feedbackText() {
+  const lines = [`《理想国》读书会简明版 · 读者反馈`, `读者：${state.name || "（没留名字）"}`, ""];
+  PAGES.forEach((p) => {
+    const notes = state.notes.filter((x) => x.page === p.id);
+    const lvl = state.level[p.id];
+    if (!notes.length && lvl === undefined && !state.tasks[p.id]) return;
+    lines.push(`【${pageName(p)}】`);
+    if (lvl !== undefined) lines.push(`看懂了吗：${LEVELS[lvl]}`);
+    if (state.tasks[p.id]) lines.push(`这周试一试：做了`);
+    notes.forEach((x) => {
+      if (x.text) lines.push(`· 划线：「${x.text}」`);
+      lines.push(`  问题：${x.q || "（没写问题）"}`);
+    });
+    lines.push("");
+  });
+  return lines.join("\n").trim();
+}
+function openMine() {
+  const notes = state.notes;
+  sheet(`<h3>我的问题（${notes.length}）</h3>
+    ${notes.length ? notes.map((x) => {
+      const p = PAGES[pageIdx(x.page)];
+      return `<div class="note"><a href="#${x.page}" data-go="${x.page}">${esc(pageName(p))}</a>${x.text ? `<p class="quote" style="margin:4px 0 0">${esc(x.text)}</p>` : ""}<p class="q">${esc(x.q || "（没写问题）")}</p></div>`;
+    }).join("") : `<p class="hint">还没有问题。读的时候按住文字选中，点“对这段提问”。</p>`}
+    <h3 style="margin-top:18px">发给作者</h3>
+    <p class="hint">${CONFIG.feedbackUrl ? "你的问题保存后会自动发给作者，不用再做什么。下面的按钮可以再发一份到微信。" : esc(CONFIG.sendTo)}</p>
+    <input type="text" id="nameBox" placeholder="你的名字或昵称（可以不填）" value="${esc(state.name)}">
+    <div class="row">
+      <button class="btn" id="sendBtn">复制，去微信发送</button>
+      ${navigator.share ? `<button class="btn ghost" id="shareBtn">用其他方式分享</button>` : ""}
+      <button class="btn ghost" id="closeMine">关闭</button>
+    </div>
+    <textarea id="fbText" readonly style="margin-top:12px;min-height:140px" aria-label="要发送的内容"></textarea>
+    <p class="hint">复制不成功的话，可以长按上面的文字全选复制。</p>`);
+  const fb = $("#fbText");
+  const refresh = () => { state.name = $("#nameBox").value.trim(); save(); fb.value = feedbackText(); };
+  refresh();
+  $("#nameBox").oninput = refresh;
+  $("#closeMine").onclick = closeSheet;
+  $("#sendBtn").onclick = async () => {
+    refresh();
+    if (CONFIG.feedbackUrl) {
+      try { await fetch(CONFIG.feedbackUrl, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: state.name, text: fb.value, notes: state.notes, level: state.level, tasks: state.tasks }) }); toast("已发送，谢谢！"); return; } catch (e) {}
+    }
+    if (await copy(fb.value)) toast("已复制，打开微信粘贴发送就行。");
+    else { fb.focus(); fb.select(); toast("请长按文字，选“全选”再复制。"); }
+  };
+  const sb = $("#shareBtn");
+  if (sb) sb.onclick = () => { refresh(); navigator.share({ title: "读书会反馈", text: fb.value }).catch(() => {}); };
+}
+async function copy(text) {
+  try { await navigator.clipboard.writeText(text); return true; } catch (e) {}
+  try {
+    const t = document.createElement("textarea");
+    t.value = text; t.setAttribute("readonly", ""); t.style.position = "fixed"; t.style.opacity = "0";
+    document.body.appendChild(t); t.select(); t.setSelectionRange(0, text.length);
+    const ok = document.execCommand("copy"); t.remove(); return ok;
+  } catch (e) { return false; }
+}
+let toastTimer;
+function toast(msg) {
+  let t = $(".toast");
+  if (!t) { t = document.createElement("div"); t.className = "toast"; t.setAttribute("role", "status"); document.body.appendChild(t); }
+  t.textContent = msg; clearTimeout(toastTimer); toastTimer = setTimeout(() => t.remove(), 2600);
+}
+
+route();
+
+// ---------- install as a home-screen app ----------
+if ("serviceWorker" in navigator && location.protocol === "https:") {
+  navigator.serviceWorker.register("sw.js").catch(() => {});
+}
+(function installHint() {
+  const standalone = window.matchMedia("(display-mode: standalone)").matches || navigator.standalone;
+  if (standalone || state.hideInstall) return;
+  const ua = navigator.userAgent;
+  let how;
+  if (/MicroMessenger/i.test(ua)) how = "点右上角“⋯”，选“在浏览器打开”，再把它添加到主屏幕。";
+  else if (/iPhone|iPad|iPod/i.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1)) how = "点下方的“分享”按钮，选“添加到主屏幕”。";
+  else if (/Android/i.test(ua)) how = "点浏览器菜单“⋮”，选“添加到主屏幕”或“安装应用”。";
+  else return;
+  const bar = document.createElement("div");
+  bar.className = "install";
+  bar.innerHTML = `<span><b>放到手机桌面，像App一样打开：</b>${how}</span><button aria-label="关闭">知道了</button>`;
+  const box = document.createElement("div");
+  box.className = "wrap"; box.style.paddingTop = "16px";
+  box.appendChild(bar);
+  bar.querySelector("button").onclick = () => { state.hideInstall = true; persist(); box.remove(); };
+  document.querySelector("main").prepend(box);
+})();
+</script>
+</body>
+</html>
